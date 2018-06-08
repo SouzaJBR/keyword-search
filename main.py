@@ -3,24 +3,27 @@ import csv
 import re
 import argparse
 
+
 # Source: https://stackoverflow.com/a/5320179 by Hugh Bothwell
 def findWholeWord(w):
     return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
 
 def find_word(w, t):
-    return w in t
+    return w.lower() in t.lower()
 
 
 if __name__ == '__main__':
 
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('queryFile', help='File containing the query', type=str)
-    parser.add_argument('scopusFile', help='CSV File containing the Scopus result exported to CSV. Before export please select "Citation Information" and "Abstract & keywords" only', type=str)
+    parser.add_argument('scopusFile',
+                        help='CSV File containing the Scopus result exported to CSV. Before export please select "Citation Information" and "Abstract & keywords" only',
+                        type=str)
 
     parser.add_argument('--detailed', action='store_true', default=False)
-
 
     args = parser.parse_args()
 
@@ -41,19 +44,31 @@ if __name__ == '__main__':
 
         for row in csvData:
 
+            paperTitle = row[0]
+
+            if paperTitle == '':
+                print 'vazio'
+
             tokenMatch = []
 
             for (token, matches) in tokens:
-                if find_word(token, row[1]) or find_word(token, row[15]) or find_word(token, row[16]):
-                    matches.append(row[1])
-                    tokenMatch.append(token)
+                for attribute in row:
+                    if find_word(token, attribute):
+                        matches.append(paperTitle)
+                        tokenMatch.append(token)
+                        break
 
-            papers.append((row[1], tokenMatch))
+                    #csvRows = [r for r in csvRowData]
+
+
+
+            papers.append((paperTitle, tokenMatch))
 
         print('==================== TOKENS - PAPERS COUNT ==================')
         tokens = sorted(tokens, key=lambda matches: len(matches[1]))
         for token, matches in tokens:
             print(token + ' => ' + str(len(matches)) + ' papers')
+
 
         print('\n\n')
 
@@ -82,8 +97,8 @@ if __name__ == '__main__':
                 for match in matches:
                     print('\t' + match)
 
-                print ('\n')
+                print('\n')
 
-        #print findWholeWord('based')('“Android-based Disease Monitoringn')
+        # print findWholeWord('based')('“Android-based Disease Monitoringn')
         # for row in csvData:
         # '(\sOR\s)|(\sAND\s)'     print(row[1])
